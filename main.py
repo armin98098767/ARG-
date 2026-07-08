@@ -19,11 +19,11 @@ import httpx
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("ARG-Gateway")
+logger = logging.getLogger("KIA")
 
 IRAN_TZ = ZoneInfo("Asia/Tehran")
 
-app = FastAPI(title="ARG Gateway", docs_url=None, redoc_url=None)
+app = FastAPI(title="KIA", docs_url=None, redoc_url=None)
 
 CONFIG = {
     "port": int(os.environ.get("PORT", 8000)),
@@ -157,7 +157,7 @@ async def startup():
     )
     await load_state()
     log_activity("system", "سرور راه‌اندازی شد", "ok")
-    logger.info(f"ARG Gateway v9.2 started on port {CONFIG['port']}")
+    logger.info(f"KIA v9.2 started on port {CONFIG['port']}")
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -176,7 +176,7 @@ def generate_uuid() -> str:
 def now_ir() -> datetime:
     return datetime.now(IRAN_TZ)
 
-def generate_vless_link(uuid: str, host: str, remark: str = "ARG", protocol: str = DEFAULT_PROTOCOL, fingerprint: str = "chrome") -> str:
+def generate_vless_link(uuid: str, host: str, remark: str = "KIA", protocol: str = DEFAULT_PROTOCOL, fingerprint: str = "chrome") -> str:
     if protocol == "vless-ws":
         path = f"/ws/{uuid}"
         params = {
@@ -320,7 +320,7 @@ async def ensure_default_link():
 # ── Basic endpoints ───────────────────────────────────────────────────────────
 @app.get("/")
 async def root():
-    return {"service": "ARG Gateway", "version": "9.2", "status": "active"}
+    return {"service": "KIA", "version": "9.2", "status": "active"}
 
 @app.get("/health")
 async def health():
@@ -337,7 +337,7 @@ async def subscription_single(uuid: str):
     host = get_host()
     proto = link.get("protocol", DEFAULT_PROTOCOL)
     fp = link.get("fingerprint", "chrome")
-    vless = generate_vless_link(uuid, host, remark=f"ARG-{link['label']}", protocol=proto, fingerprint=fp)
+    vless = generate_vless_link(uuid, host, remark=f"KIA-{link['label']}", protocol=proto, fingerprint=fp)
     content = base64.b64encode(vless.encode()).decode()
     return Response(content=content, media_type="text/plain",
                     headers={"profile-title": quote(link["label"])})
@@ -351,7 +351,7 @@ async def subscription_all(_=Depends(require_auth)):
         for uid, d in LINKS.items():
             if is_link_allowed(d):
                 fp = d.get("fingerprint", "chrome")
-                lines.append(generate_vless_link(uid, host, remark=f"ARG-{d['label']}", protocol=d.get("protocol", DEFAULT_PROTOCOL), fingerprint=fp))
+                lines.append(generate_vless_link(uid, host, remark=f"KIA-{d['label']}", protocol=d.get("protocol", DEFAULT_PROTOCOL), fingerprint=fp))
     content = base64.b64encode("\n".join(lines).encode()).decode()
     return Response(content=content, media_type="text/plain")
 
@@ -488,7 +488,7 @@ async def sub_group_subscription(uuid_key: str, request: Request):
             link = LINKS.get(lid)
             if link and is_link_allowed(link):
                 fp = link.get("fingerprint", "chrome")
-                lines.append(generate_vless_link(lid, host, remark=f"ARG-{link['label']}", protocol=link.get("protocol", DEFAULT_PROTOCOL), fingerprint=fp))
+                lines.append(generate_vless_link(lid, host, remark=f"KIA-{link['label']}", protocol=link.get("protocol", DEFAULT_PROTOCOL), fingerprint=fp))
 
     content = base64.b64encode("\n".join(lines).encode()).decode()
     return Response(
@@ -673,7 +673,7 @@ async def create_link(request: Request, _=Depends(require_auth)):
         "uuid": uid,
         **LINKS[uid],
         "expired": False,
-        "vless_link": generate_vless_link(uid, host, remark=f"ARG-{label}", protocol=protocol, fingerprint=fingerprint),
+        "vless_link": generate_vless_link(uid, host, remark=f"KIA-{label}", protocol=protocol, fingerprint=fingerprint),
         "sub_url": f"https://{host}/sub/{uid}",
     }
 
@@ -693,7 +693,7 @@ async def list_links(_=Depends(require_auth)):
             "fingerprint": fp,
             "max_devices": d.get("max_devices", 0),
             "expired": is_link_expired(d),
-            "vless_link": generate_vless_link(uid, host, remark=f"ARG-{d['label']}", protocol=proto, fingerprint=fp),
+            "vless_link": generate_vless_link(uid, host, remark=f"KIA-{d['label']}", protocol=proto, fingerprint=fp),
             "sub_url": f"https://{host}/sub/{uid}",
         })
     result.sort(key=lambda x: x["created_at"], reverse=True)
@@ -862,7 +862,7 @@ async def public_sub_data(uuid_key: str, request: Request):
             "limit_bytes": link.get("limit_bytes", 0),
             "limit_fmt": "∞" if link.get("limit_bytes", 0) == 0 else fmt_bytes(link["limit_bytes"]),
             "expires_at": link.get("expires_at"),
-            "vless_link": generate_vless_link(lid, host, remark=f"ARG-{link['label']}", protocol=proto, fingerprint=fp),
+            "vless_link": generate_vless_link(lid, host, remark=f"KIA-{link['label']}", protocol=proto, fingerprint=fp),
             "sub_url": f"https://{host}/sub/{lid}",
             "connections": conn_count,
         })
